@@ -34,12 +34,17 @@ const ROW_GRID = "grid grid-cols-[140px_1fr_96px] items-center gap-3";
 type Props = {
   timeline: StudentTimeline[];
   durationMin: number;
+  /** Right edge the server computed segments against. */
   elapsedMin: number;
+  /** Client-side "now" (≥ elapsedMin) so the now line moves between data updates on live sessions. */
+  nowMin?: number;
   live: boolean;
 };
 
-export default function Timeline({ timeline, durationMin, elapsedMin, live }: Props) {
+export default function Timeline({ timeline, durationMin, elapsedMin, nowMin = elapsedMin, live }: Props) {
   const pct = (min: number) => `${(Math.max(0, Math.min(durationMin, min)) / durationMin) * 100}%`;
+  // On live sessions, segments still open at the server's edge (connected or gap) extend to the moving now line.
+  const segEnd = (endMin: number) => (live && endMin >= elapsedMin ? nowMin : endMin);
   const ticks: number[] = [];
   for (let m = 0; m <= durationMin; m += 15) ticks.push(m);
 
@@ -66,14 +71,14 @@ export default function Timeline({ timeline, durationMin, elapsedMin, live }: Pr
                       className={`absolute inset-y-0 ${SEGMENT_CLASS[seg.type]}`}
                       style={{
                         left: pct(seg.startMin),
-                        width: `calc(${pct(seg.endMin)} - ${pct(seg.startMin)})`,
+                        width: `calc(${pct(segEnd(seg.endMin))} - ${pct(seg.startMin)})`,
                         ...(seg.type === "absent" ? ABSENT_STRIPES : {}),
                       }}
                       title={`${SEGMENT_LABEL[seg.type]} · min ${seg.startMin}–${seg.endMin}`}
                     />
                   ))}
                   {live && (
-                    <div className="absolute inset-y-0 w-0.5 bg-slate-900" style={{ left: pct(elapsedMin) }} />
+                    <div className="absolute inset-y-0 w-0.5 bg-slate-900" style={{ left: pct(nowMin) }} />
                   )}
                 </div>
                 <span>
@@ -98,7 +103,7 @@ export default function Timeline({ timeline, durationMin, elapsedMin, live }: Pr
               {live && (
                 <span
                   className="absolute top-0 -translate-x-1/2 font-medium text-slate-900"
-                  style={{ left: pct(elapsedMin) }}
+                  style={{ left: pct(nowMin) }}
                 >
                   ▲ now
                 </span>
