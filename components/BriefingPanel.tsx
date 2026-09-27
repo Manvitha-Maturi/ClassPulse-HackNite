@@ -18,6 +18,8 @@ type Props = {
   sessionId: string;
   /** Changes when a new reliability alert appears (or grows); triggers an automatic refresh. */
   alertSignature: string;
+  /** Show the Refresh button (off for the frozen report, which generates once on load). */
+  refreshable?: boolean;
 };
 
 async function fetchBriefing(sessionId: string): Promise<Briefing | { error: string }> {
@@ -35,7 +37,7 @@ async function fetchBriefing(sessionId: string): Promise<Briefing | { error: str
   }
 }
 
-export default function BriefingPanel({ sessionId, alertSignature }: Props) {
+export default function BriefingPanel({ sessionId, alertSignature, refreshable = true }: Props) {
   const [briefing, setBriefing] = useState<Briefing | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,19 +65,21 @@ export default function BriefingPanel({ sessionId, alertSignature }: Props) {
   };
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-slate-200 bg-white p-4" data-print-avoid-break>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-semibold text-slate-900">AI briefing</h2>
           {briefing && <SourceBadge briefing={briefing} />}
         </div>
-        <button
-          onClick={refresh}
-          disabled={loading}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-        >
-          {loading ? "Thinking…" : "Refresh"}
-        </button>
+        {refreshable && (
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50 print:hidden"
+          >
+            {loading ? "Thinking…" : "Refresh"}
+          </button>
+        )}
       </div>
 
       {error && (

@@ -60,7 +60,7 @@ export default function Timeline({ timeline, durationMin, elapsedMin, nowMin = e
           {timeline.map((s) => {
             const chip = STATUS_CHIP[s.status];
             return (
-              <div key={s.studentId} className={ROW_GRID}>
+              <div key={s.studentId} className={ROW_GRID} data-print-avoid-break>
                 <span className="truncate text-sm text-slate-700" title={s.name}>
                   {s.name}
                 </span>

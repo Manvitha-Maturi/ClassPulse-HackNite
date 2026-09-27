@@ -19,7 +19,7 @@ export default function StatCards({ stats }: { stats: Stats }) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       {cards.map((c) => (
-        <div key={c.label} className="rounded-xl border border-slate-200 bg-white p-4">
+        <div key={c.label} className="rounded-xl border border-slate-200 bg-white p-4" data-print-avoid-break>
           <p className="text-sm font-medium text-slate-500">{c.label}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{c.value}</p>
           <p className="mt-1 text-xs text-slate-400">{c.hint}</p>

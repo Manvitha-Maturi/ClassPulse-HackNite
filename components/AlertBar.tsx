@@ -9,6 +9,7 @@ export default function AlertBar({ alerts }: { alerts: Alert[] }) {
         <div
           key={`${a.startMin}-${a.endMin}`}
           role="alert"
+          data-print-avoid-break
           className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900"
         >
           <span aria-hidden className="mt-0.5 text-lg leading-none">⚠</span>

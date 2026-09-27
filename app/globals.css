@@ -19,3 +19,21 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Report printing: white page, keep timeline/segment colours (browsers drop backgrounds by default),
+   and never split a timeline row or a card across pages. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  body {
+    background: #ffffff;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  [data-print-avoid-break] {
+    break-inside: avoid;
+  }
+}
