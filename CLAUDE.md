@@ -21,7 +21,7 @@ ClassPulse is a camera-free, privacy-first session reliability and engagement an
 - Next.js 16: auth/session refresh goes in **`proxy.ts`, not `middleware.ts`** (blueprint §4.7 is outdated here). Read `node_modules/next/dist/docs/` before using Next APIs.
 - Supabase: Postgres, Auth (email/password), Realtime (`postgres_changes`), RLS — `@supabase/supabase-js`, `@supabase/ssr`.
 - Gemini: **`@google/genai` ONLY** (`GoogleGenAI`). Never install/import `@google/generative-ai`. Model from `GEMINI_MODEL`.
-- Vitest (tests for `lib/metrics.ts`), tsx for `scripts/seed.ts`, hosted on Vercel.
+- Vitest (tests for `lib/metrics.ts` and the pure Zoom HMAC helpers in `lib/zoom.ts`), tsx for `scripts/seed.ts`, hosted on Vercel.
 - Installed: `@supabase/supabase-js` 2.117, `@supabase/ssr` 0.12, `@google/genai` 2.24, `server-only`; dev: `vitest` 5.0, `tsx` 4.23, `dotenv` 18.0, `@types/node` 24 (vitest 5 needs ≥22).
 - Scripts: `npm run typecheck` (`tsc --noEmit`), `npm test` (`vitest run`), `npm run seed` (`tsx scripts/seed.ts`).
 
@@ -55,7 +55,7 @@ Segments: `connected` (green) · `gap` (red) · `late` (amber) · `left` (grey) 
 - Windows: commands must be cross-platform (npm scripts, `npx`) — no bash-only syntax.
 
 ## Out of scope (do not build)
-Camera/face/emotion anything · storing chat text · attention scores · student-facing views · multi-tenant org management · email notifications · D3 · any separate backend server. Zoom webhook is stretch-only, after MVP is deployed and rehearsed.
+Camera/face/emotion anything · storing chat text · attention scores · student-facing views · multi-tenant org management · email notifications · D3 · any separate backend server. Zoom webhook (`app/api/webhooks/zoom`) is built; it must only write via `lib/ingest.ts` and never create students.
 
 ## Workflow
 - One task at a time. After each task run `npx tsc --noEmit` and `npm test` (once tests exist) and report the results.

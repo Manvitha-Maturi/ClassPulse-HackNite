@@ -45,7 +45,14 @@ useSessionRealtime  ◀── postgres_changes (RLS-scoped) ──────�
 ```
 
 - **`lib/metrics.ts`**: all product logic as pure functions: timelines, stats and reliability alerts. It's covered by `lib/metrics.test.ts` against a deterministic 12-student scenario.
-- **`lib/ingest.ts`**: the single write path for events. The simulator uses it today, and a platform webhook (e.g. Zoom `participant_joined/left`) plugs into the same functions.
+- **`lib/ingest.ts`**: the single write path for events, shared by the simulator and the Zoom webhook.
+- **Zoom webhook** (`POST /api/webhooks/zoom`):
+  - Answers Zoom's `endpoint.url_validation` challenge.
+  - Verifies `x-zm-signature` (HMAC-SHA256 over the raw body, timing-safe compare, 5-minute replay window).
+  - Maps `meeting.participant_joined/left` to join/leave events.
+  - Finds the live session by `external_meeting_id`, then matches the student by `external_participant_id`, falling back to display name within the course.
+  - Reads only ids, the display name and a timestamp; emails and other payload fields are ignored.
+  - It's covered by `lib/zoom.test.ts` and tested end to end with signed requests. It hasn't been connected to a production Zoom app yet.
 - **Realtime**: the dashboard subscribes to inserts on `connection_logs`/`participation_events` and updates to its session row, then refetches, debounced. There are no polling loops.
 - **Gemini**: `@google/genai` with `responseMimeType: "application/json"` and `responseJsonSchema`, so the briefing arrives as a typed object that renders directly. There's an 8 s cutoff, and any error falls back to a rules-based briefing, labelled in the UI.
 
@@ -77,7 +84,7 @@ Requirements: Node 20+ (tested on Node 24), a Supabase project, and a Gemini API
 |---|---|
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build / serve |
-| `npm test` | Vitest suite for `lib/metrics.ts` |
+| `npm test` | Vitest suites for `lib/metrics.ts` and the Zoom HMAC helpers |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run seed` | Recreate the demo instructor's data |
 
@@ -93,6 +100,7 @@ Requirements: Node 20+ (tested on Node 24), a Supabase project, and a Gemini API
 | `NEXT_PUBLIC_DEMO_MODE` | public | `true` shows the Live Class Simulator. It's inlined at build time. |
 | `DEMO_INSTRUCTOR_EMAIL` | server (seed) | Demo login email |
 | `DEMO_INSTRUCTOR_PASSWORD` | server (seed) | Demo login password |
+| `ZOOM_WEBHOOK_SECRET_TOKEN` | **server-only**, optional | Zoom app Secret Token. Without it, the webhook returns 503. |
 
 Server-only keys are read only in `lib/supabase/admin.ts`, `lib/gemini.ts` (both `import "server-only"`) and `scripts/seed.ts`. On Vercel, set all eight under Project → Settings → Environment Variables, and redeploy after changing any of them.
 
@@ -116,4 +124,4 @@ Server-only keys are read only in `lib/supabase/admin.ts`, `lib/gemini.ts` (both
 - **Student-facing views, multi-tenant org management, email notifications.**
 - **Chart libraries / D3.** The timeline is plain positioned `div`s.
 - **A separate backend server.** API route handlers in the same Next.js app are enough.
-- **Zoom integration (not built yet).** The ingest adapter is platform-agnostic, so a Zoom webhook would call the same `ingestConnection`/`ingestParticipation` functions the simulator uses.
+- **Roster changes from webhook data.** The Zoom webhook only records join/leave for students already on the roster. Unknown participants are logged by id and ignored.
