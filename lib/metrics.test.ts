@@ -1,5 +1,5 @@
 // lib/metrics.test.ts
-// The seed scenario from docs/BLUEPRINT.md §4.2, built in memory. The expected values are the spec.
+// The deterministic CS3003 seed scenario (same data as scripts/seed.ts), built in memory. The expected values are the spec.
 import { describe, expect, it } from "vitest";
 import {
   buildTimeline,
@@ -78,7 +78,7 @@ const byId = (id: string): StudentTimeline => {
   return s;
 };
 
-describe("seed scenario (BLUEPRINT §4.2)", () => {
+describe("seed scenario (CS3003)", () => {
   it("computes the expected stats", () => {
     expect(computeStats(session, timeline)).toEqual({
       enrolled: 12,

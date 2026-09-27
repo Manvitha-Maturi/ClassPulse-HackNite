@@ -1,4 +1,4 @@
-// scripts/seed.ts — idempotent demo data: the deterministic CS3003 scenario from docs/BLUEPRINT.md §4.2.
+// scripts/seed.ts — idempotent demo data: the deterministic CS3003 scenario (the spec lib/metrics.test.ts asserts).
 // Run with `npm run seed`. Uses the service-role key directly (lib/supabase/admin.ts is server-only).
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";

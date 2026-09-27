@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# personal planning doc (kept locally, not published)
+/docs/BLUEPRINT.md

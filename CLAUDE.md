@@ -2,7 +2,7 @@
 
 # ClassPulse — project rules
 
-Source of truth: `docs/BLUEPRINT.md` (its Errata section, if present, overrides everything above it).
+Original spec: `docs/BLUEPRINT.md` (local only, gitignored; its Errata section, if present, overrides everything above it). This file and the code are now the reference.
 
 ## Product
 ClassPulse is a camera-free, privacy-first session reliability and engagement analytics dashboard for instructors teaching live online classes. It answers three questions in real time — who is actually connected, whose connection is unstable, and who hasn't responded to polls — using only behavioural metadata the meeting platform already records (join/leave events and event *kinds*: poll response, chat, hand raise). It never touches video, audio, faces, or message content and never produces an "attention score". Google Gemini (Flash) turns the metrics into plain-language, action-oriented insights, with a rules-based fallback.
