@@ -12,7 +12,9 @@ It uses only metadata the meeting platform already records: join/leave events an
 
 **Live demo:** https://class-pulse-hack-nite.vercel.app
 
-![ClassPulse dashboard: stat cards, reliability alert, Gemini AI briefing and connection timeline](docs/screenshots/dashboard.png)
+![Live session right after "Storm + poll": four students drop as poll 2 opens, the connectivity alert fires, and the Gemini briefing switches to "Act now", explaining that the 59% overall poll rate understates the 71% rate among connected students](docs/screenshots/live-network-storm.png)
+
+<sub>Live demo, seconds after **Storm + poll**: four students drop just as poll 2 opens. Deterministic code raises the connectivity alert. Gemini supplies the judgement: the overall 59% poll rate understates the 71% rate among students who could answer. It says what changed since its last briefing and puts a 60-second action first.</sub>
 
 ---
 
@@ -20,14 +22,29 @@ It uses only metadata the meeting platform already records: join/leave events an
 
 All screenshots use the seeded demo data (12 fictional students in CS3003).
 
-| Live demo: network storm | Post-session report |
-|---|---|
-| ![Live session during a simulated network storm: the reliability alert fires and the Gemini briefing updates](docs/screenshots/live-network-storm.png) | ![Printable report with the same metrics, the briefing generated once, and an Export PDF button](docs/screenshots/report.png) |
-| Four students drop at once. ClassPulse flags a possible shared connectivity issue, not disengagement, and the AI briefing refreshes for the new alert. | A frozen, printable view of the same metrics. **Export PDF** keeps the timeline colours and never splits a row across pages. |
+### What Gemini sees
 
-| Landing page | Session list |
+![AI briefing with the "What Gemini sees" panel open: the pseudonymised input on the left (S-labels, aggregates, poll context) and Gemini's validated output on the right, before names are restored server-side](docs/screenshots/what-gemini-sees.png)
+
+The dashboard shows exactly what crossed the privacy boundary: the pseudonymised payload sent to Gemini (`S2`, `S5`, …, never names), and its schema-validated output before names are restored on the server.
+
+### Ask about this session
+
+| Grounded answer | Declined by design |
 |---|---|
-| ![Landing page with the headline "Know who's really there. Without a camera." and three privacy pillars](docs/screenshots/landing.png) | ![Session list with an ended and a live CS3003 session](docs/screenshots/sessions.png) |
+| ![Ask panel answering "Is the latest poll's response rate a fair picture?" by comparing the connected response rate with the overall rate, with evidence chips naming the input fields used](docs/screenshots/ask-answer.png) | ![Ask panel declining "Which students aren't paying attention?" with a "Declined by design" badge and an explanation of what ClassPulse deliberately doesn't measure](docs/screenshots/ask-declined.png) |
+| Answers cite the input fields they used as evidence. | Questions about attention, emotion, motivation, effort or cheating are declined, because ClassPulse deliberately doesn't measure them. |
+
+### Report, landing page and session list
+
+| Post-session report | Landing page |
+|---|---|
+| ![Printable report with the same metrics, the Gemini briefing generated once, and an Export PDF button](docs/screenshots/report.png) | ![Landing page with the headline "Know who's really there. Without a camera." and three privacy pillars](docs/screenshots/landing.png) |
+| A frozen, printable view of the same metrics. **Export PDF** keeps the timeline colours and never splits a row across pages. | |
+
+| Session list |
+|---|
+| ![Session list with an ended and a live CS3003 session](docs/screenshots/sessions.png) |
 
 <p align="center">
   <img src="docs/screenshots/mobile-dashboard.png" alt="Dashboard at 390px phone width: stat cards two per row, timeline scrolls inside its card" width="260"><br>
