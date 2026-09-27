@@ -59,16 +59,32 @@ const supabase = createClient(requireEnv("NEXT_PUBLIC_SUPABASE_URL"), requireEnv
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
+/** Checks the credentials with a throwaway anon client, so the service-role client's state is untouched. */
+async function passwordWorks(email: string, password: string): Promise<boolean> {
+  const probe = createClient(requireEnv("NEXT_PUBLIC_SUPABASE_URL"), requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { error } = await probe.auth.signInWithPassword({ email, password });
+  if (error) return false;
+  await probe.auth.signOut({ scope: "local" });
+  return true;
+}
+
 async function findOrCreateInstructor(email: string, password: string): Promise<string> {
   for (let page = 1; ; page++) {
     const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) throw error;
     const existing = data.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
     if (existing) {
-      // Keep the password in sync with .env.local so the demo login always works.
-      const { error: updErr } = await supabase.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
-      if (updErr) throw updErr;
-      console.log(`Demo instructor exists: ${email}`);
+      // Only reset the password if .env.local's no longer works: a password update revokes
+      // existing login sessions, which would sign the instructor out on every re-seed.
+      if (!(await passwordWorks(email, password))) {
+        const { error: updErr } = await supabase.auth.admin.updateUserById(existing.id, { password, email_confirm: true });
+        if (updErr) throw updErr;
+        console.log(`Demo instructor exists: ${email} (password reset to .env.local value)`);
+      } else {
+        console.log(`Demo instructor exists: ${email}`);
+      }
       return existing.id;
     }
     if (data.users.length < 1000) break;

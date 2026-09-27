@@ -25,9 +25,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Do not run code between createServerClient and getClaims(): getClaims refreshes the session.
-  const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims);
+  // Do not run code between createServerClient and getUser(): it refreshes the session.
+  // getUser() asks the Auth server, matching the pages' check. getClaims() only verifies the JWT locally,
+  // so a revoked session still "passes" here but fails in the page, causing a /login <-> /sessions loop.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const signedIn = Boolean(user);
   const { pathname } = request.nextUrl;
 
   const redirectTo = (path: string) => {
