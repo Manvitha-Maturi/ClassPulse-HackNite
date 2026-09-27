@@ -8,6 +8,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import AlertBar from "@/components/AlertBar";
 import LiveBadge from "@/components/LiveBadge";
 import ParticipationPanel from "@/components/ParticipationPanel";
+import SimulatorPanel, { DEMO_MODE } from "@/components/SimulatorPanel";
 import StatCards from "@/components/StatCards";
 import Timeline from "@/components/Timeline";
 import UpdatedAgo from "@/components/UpdatedAgo";
@@ -128,6 +129,7 @@ function Dashboard({
         </Link>
       </header>
 
+      {live && DEMO_MODE && <SimulatorPanel sessionId={session.id} />}
       <StatCards stats={stats} />
       <AlertBar alerts={alerts} />
       <Timeline

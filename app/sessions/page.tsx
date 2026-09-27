@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatUtc } from "@/lib/format";
 import SignOutButton from "@/components/SignOutButton";
+import StartLiveDemoButton from "@/components/StartLiveDemoButton";
 
 type SessionRow = {
   id: string;
@@ -34,7 +35,10 @@ export default async function SessionsPage() {
           <h1 className="text-2xl font-semibold text-slate-900">Your sessions</h1>
           <p className="mt-1 text-sm text-slate-500">Signed in as {user.email}</p>
         </div>
-        <SignOutButton />
+        <div className="flex items-start gap-2">
+          {process.env.NEXT_PUBLIC_DEMO_MODE === "true" && <StartLiveDemoButton />}
+          <SignOutButton />
+        </div>
       </div>
 
       {error ? (
