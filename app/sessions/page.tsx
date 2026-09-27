@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { formatUtc } from "@/lib/format";
 import SignOutButton from "@/components/SignOutButton";
 
 type SessionRow = {
@@ -12,13 +13,6 @@ type SessionRow = {
   duration_minutes: number;
   status: "live" | "ended";
 };
-
-// Stored and rendered as UTC so the server and every viewer agree on the same instant.
-const dateFmt = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-});
 
 export default async function SessionsPage() {
   const supabase = await createClient();
@@ -65,7 +59,7 @@ export default async function SessionsPage() {
                     {s.course_name && <span className="ml-2">{s.course_name}</span>}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {dateFmt.format(new Date(s.started_at))} UTC · {s.duration_minutes} min
+                    {formatUtc(s.started_at)} · {s.duration_minutes} min
                   </p>
                 </div>
                 {s.status === "live" ? (
