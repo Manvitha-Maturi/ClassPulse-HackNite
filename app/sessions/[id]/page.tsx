@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
 import AlertBar from "@/components/AlertBar";
+import BriefingPanel from "@/components/BriefingPanel";
 import LiveBadge from "@/components/LiveBadge";
 import ParticipationPanel from "@/components/ParticipationPanel";
 import SimulatorPanel, { DEMO_MODE } from "@/components/SimulatorPanel";
@@ -132,6 +133,10 @@ function Dashboard({
       {live && DEMO_MODE && <SimulatorPanel sessionId={session.id} />}
       <StatCards stats={stats} />
       <AlertBar alerts={alerts} />
+      <BriefingPanel
+        sessionId={session.id}
+        alertSignature={live ? alerts.map((a) => `${a.startMin}:${a.affectedCount}`).join("|") : ""}
+      />
       <Timeline
         timeline={timeline}
         durationMin={session.duration_minutes}
