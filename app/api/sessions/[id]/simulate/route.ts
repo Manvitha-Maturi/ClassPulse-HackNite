@@ -14,6 +14,14 @@ const DEMO_COURSE_CODE = "CS3003";
 const DEMO_COURSE_NAME = "Software Engineering";
 const DEMO_DURATION_MIN = 75;
 const DEMO_ELAPSED_MIN = 25;
+/**
+ * Tags sessions created by start_live_demo so only they are ever auto-deleted (never the seed session).
+ * Stored in external_meeting_id, which is otherwise a platform meeting id; Zoom ids are numeric, so this
+ * can't collide with a real meeting in the Zoom webhook's lookup.
+ */
+const DEMO_SESSION_TAG = "simulator-demo";
+/** A live demo runs out ~50 real minutes after creation (starts 25 min into a 75-min class); older ones are abandoned. */
+const DEMO_STALE_AFTER_MIN = 90;
 const STORM_SIZE = 4;
 
 const ACTIONS = ["start_live_demo", "tick", "network_storm", "recover", "launch_poll", "end_session"] as const;
@@ -94,6 +102,17 @@ async function startLiveDemo(instructorId: string) {
   if (rosterErr) throw rosterErr;
   if (!roster?.length) return json({ error: `No ${DEMO_COURSE_CODE} roster. Run npm run seed first.` }, 400);
 
+  // Housekeeping for the shared demo account: drop this instructor's abandoned demo sessions (cascades to
+  // their events). Only tagged sessions older than DEMO_STALE_AFTER_MIN, so anyone mid-demo keeps theirs.
+  const staleBefore = new Date(Date.now() - DEMO_STALE_AFTER_MIN * 60000).toISOString();
+  const { error: cleanupErr } = await admin
+    .from("sessions")
+    .delete()
+    .eq("instructor_id", instructorId)
+    .eq("external_meeting_id", DEMO_SESSION_TAG)
+    .lt("created_at", staleBefore);
+  if (cleanupErr) throw cleanupErr;
+
   const startMs = Date.now() - DEMO_ELAPSED_MIN * 60000;
   const { data: session, error: sessErr } = await admin
     .from("sessions")
@@ -101,6 +120,7 @@ async function startLiveDemo(instructorId: string) {
       instructor_id: instructorId,
       course_code: DEMO_COURSE_CODE,
       course_name: DEMO_COURSE_NAME,
+      external_meeting_id: DEMO_SESSION_TAG,
       started_at: new Date(startMs).toISOString(),
       duration_minutes: DEMO_DURATION_MIN,
       polls_launched: 1,

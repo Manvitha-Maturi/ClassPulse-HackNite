@@ -157,7 +157,7 @@ Server-only keys are read only in `lib/supabase/admin.ts`, `lib/gemini.ts` (both
 5. **What Gemini sees** shows the exact pseudonymised input and output. **Ask about this session** answers questions with evidence and declines ones about attention or emotion.
 6. **Report** → **Export PDF** for the frozen, printable post-session view.
 
-The demo account is shared: other visitors' live demo sessions appear in the list too. `npm run seed` resets it to the single CS3003 session.
+The demo account is shared, so other visitors' recent live demo sessions appear in the list too. The seeded CS3003 session is read-only, so it looks the same for everyone. Demo sessions older than 90 minutes are deleted automatically whenever someone starts a new one, and `npm run seed` resets everything.
 
 ---
 
