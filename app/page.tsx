@@ -1,5 +1,8 @@
 import Link from "next/link";
+import DemoLoginButton from "@/components/DemoLoginButton";
 import { CameraOffIcon, EyeOffIcon, LogoMark, PollIcon, PulseIcon } from "@/components/icons";
+
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 const PILLARS = [
   {
@@ -67,14 +70,21 @@ export default function Home() {
             a poll, in real time, using only metadata the meeting platform already records.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
+            {DEMO_MODE && <DemoLoginButton />}
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:shadow-xl hover:shadow-indigo-500/30"
+              className={
+                DEMO_MODE
+                  ? "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-5 py-3 font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:border-indigo-200 hover:text-indigo-700"
+                  : "inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:shadow-xl hover:shadow-indigo-500/30"
+              }
             >
               Instructor login
             </Link>
-            <span className="text-sm text-slate-500">Demo account included</span>
           </div>
+          {DEMO_MODE && (
+            <p className="mt-3 text-sm text-slate-500">No sign-up needed: opens a shared demo account with fictional students.</p>
+          )}
         </div>
 
         <div className="rounded-2xl border border-white/60 bg-white/80 p-5 shadow-xl shadow-indigo-100/60 backdrop-blur">

@@ -10,7 +10,7 @@ ClassPulse is a real-time dashboard for instructors teaching live online classes
 
 It uses only metadata the meeting platform already records: join/leave events and the *kind* of interaction (poll response, chat, hand raise). It never touches video, audio, faces or message content, and it never produces an "attention score". Deterministic code detects; Google Gemini supplies the judgement. It connects signals the metrics can't: for example, "the poll's 40% response rate is misleading, because 3 students were disconnected when it opened and 100% of connected students answered". It says what changed since its last briefing and sets a priority. Instructors can also ask it questions about the session. It declines, by design, anything about attention or emotion. A rules-based fallback keeps the core dashboard working without Gemini.
 
-**Live demo:** https://class-pulse-hack-nite.vercel.app
+**Live demo:** https://class-pulse-hack-nite.vercel.app. Click **Try the live demo**: no sign-up or password needed. It opens a shared demo account with 12 fictional students.
 
 ![Live session right after "Storm + poll": four students drop as poll 2 opens, the connectivity alert fires, and the Gemini briefing switches to "Act now", explaining that the 59% overall poll rate understates the 71% rate among connected students](docs/screenshots/live-network-storm.png)
 
@@ -39,7 +39,7 @@ The dashboard shows exactly what crossed the privacy boundary: the pseudonymised
 
 | Post-session report | Landing page |
 |---|---|
-| ![Printable report with the same metrics, the Gemini briefing generated once, and an Export PDF button](docs/screenshots/report.png) | ![Landing page with the headline "Know who's really there. Without a camera." and three privacy pillars](docs/screenshots/landing.png) |
+| ![Printable report with the same metrics, the Gemini briefing generated once, and an Export PDF button](docs/screenshots/report.png) | ![Landing page with the headline "Know who's really there. Without a camera.", a one-click "Try the live demo" button and three privacy pillars](docs/screenshots/landing.png) |
 | A frozen, printable view of the same metrics. **Export PDF** keeps the timeline colours and never splits a row across pages. | |
 
 | Session list |
@@ -139,9 +139,9 @@ Requirements: Node 20+ (tested on Node 24), a Supabase project, and a Gemini API
 | `SUPABASE_SERVICE_ROLE_KEY` | **server-only** | Seed script, simulator and ingest writes. Bypasses RLS. |
 | `GEMINI_API_KEY` | **server-only** | Google AI Studio key |
 | `GEMINI_MODEL` | server | Model id. `gemini-flash-lite-latest` measured ~1 s per briefing, against 3–6 s for `gemini-flash-latest`. |
-| `NEXT_PUBLIC_DEMO_MODE` | public | `true` shows the Live Class Simulator. It's inlined at build time. |
-| `DEMO_INSTRUCTOR_EMAIL` | server (seed) | Demo login email |
-| `DEMO_INSTRUCTOR_PASSWORD` | server (seed) | Demo login password |
+| `NEXT_PUBLIC_DEMO_MODE` | public | `true` shows the Live Class Simulator and the one-click **Try the live demo** button. It's inlined at build time. |
+| `DEMO_INSTRUCTOR_EMAIL` | **server-only** | Demo account email: used by the seed script and one-click demo login |
+| `DEMO_INSTRUCTOR_PASSWORD` | **server-only** | Demo account password: used by the seed script and one-click demo login, and never sent to the browser |
 | `ZOOM_WEBHOOK_SECRET_TOKEN` | **server-only**, optional | Zoom app Secret Token. Without it, the webhook returns 503. |
 
 Server-only keys are read only in `lib/supabase/admin.ts`, `lib/gemini.ts` (both `import "server-only"`) and `scripts/seed.ts`. On Vercel, set all eight under Project → Settings → Environment Variables, and redeploy after changing any of them.
@@ -150,11 +150,14 @@ Server-only keys are read only in `lib/supabase/admin.ts`, `lib/gemini.ts` (both
 
 ## Demo flow
 
-1. `/sessions` → open the ended **CS3003** session: 10/12 connected, 2 unstable (Ravi, Omar), 1 absent, 61% poll response rate, and one reliability alert at minutes 18–22.
-2. **Start live demo** creates a live session 25 minutes in.
-3. **Network storm**: four rows turn red and the alert appears live. The students auto-recover after 20 s.
-4. **AI briefing** shows a badge with the model and latency, e.g. "Gemini · gemini-flash-lite-latest · ~1000 ms".
-5. **Report** → **Export PDF** for the frozen, printable post-session view.
+1. On the landing page, click **Try the live demo**. This signs you in to the shared demo account (demo mode only).
+2. `/sessions` → open the ended **CS3003** session: 10/12 connected, 2 unstable (Ravi, Omar), 1 absent, 61% poll response rate, and one reliability alert at minutes 18–22.
+3. **Start live demo** creates a live session 25 minutes in.
+4. **Storm + poll**: four rows turn red, the connectivity alert appears live, and a poll opens while those students are disconnected. Within about 2 s the AI briefing switches to **Act now**, says what changed, and explains why the overall poll rate understates responses from connected students. The students auto-recover after 20 s.
+5. **What Gemini sees** shows the exact pseudonymised input and output. **Ask about this session** answers questions with evidence and declines ones about attention or emotion.
+6. **Report** → **Export PDF** for the frozen, printable post-session view.
+
+The demo account is shared: other visitors' live demo sessions appear in the list too. `npm run seed` resets it to the single CS3003 session.
 
 ---
 

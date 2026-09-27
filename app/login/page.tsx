@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DemoLoginButton from "@/components/DemoLoginButton";
 import { LogoMark, ShieldIcon } from "@/components/icons";
 import LoginForm from "./LoginForm";
 
@@ -21,6 +22,17 @@ export default function LoginPage() {
           <div className="mt-6">
             <LoginForm />
           </div>
+          {process.env.NEXT_PUBLIC_DEMO_MODE === "true" && (
+            <>
+              <div className="my-6 flex items-center gap-3 text-xs text-slate-400">
+                <span className="h-px flex-1 bg-slate-200" />
+                or
+                <span className="h-px flex-1 bg-slate-200" />
+              </div>
+              <DemoLoginButton />
+              <p className="mt-2 text-center text-xs text-slate-500">Shared demo account with fictional students.</p>
+            </>
+          )}
         </div>
         <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-slate-500">
           <ShieldIcon className="h-3.5 w-3.5 text-emerald-600" />
