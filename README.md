@@ -12,6 +12,28 @@ It uses only metadata the meeting platform already records: join/leave events an
 
 **Live demo:** https://class-pulse-hack-nite.vercel.app
 
+![ClassPulse dashboard: stat cards, reliability alert, Gemini AI briefing and connection timeline](docs/screenshots/dashboard.png)
+
+---
+
+## Screenshots
+
+All screenshots use the seeded demo data (12 fictional students in CS3003).
+
+| Live demo: network storm | Post-session report |
+|---|---|
+| ![Live session during a simulated network storm: the reliability alert fires and the Gemini briefing updates](docs/screenshots/live-network-storm.png) | ![Printable report with the same metrics, the briefing generated once, and an Export PDF button](docs/screenshots/report.png) |
+| Four students drop at once. ClassPulse flags a likely network issue, not disengagement, and the AI briefing refreshes for the new alert. | A frozen, printable view of the same metrics. **Export PDF** keeps the timeline colours and never splits a row across pages. |
+
+| Landing page | Session list |
+|---|---|
+| ![Landing page with the headline "Know who's really there. Without a camera." and three privacy pillars](docs/screenshots/landing.png) | ![Session list with an ended and a live CS3003 session](docs/screenshots/sessions.png) |
+
+<p align="center">
+  <img src="docs/screenshots/mobile-dashboard.png" alt="Dashboard at 390px phone width: stat cards two per row, timeline scrolls inside its card" width="260"><br>
+  <sub>Mobile (390 px): stat cards two per row, and the timeline scrolls inside its card.</sub>
+</p>
+
 ---
 
 ## Privacy by design
