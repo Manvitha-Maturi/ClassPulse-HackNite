@@ -3,6 +3,7 @@
 // components/SimulatorPanel.tsx — demo-mode controls that inject events via /api/sessions/[id]/simulate.
 // The dashboard updates through Realtime, not from these responses.
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PollIcon, RefreshIcon, StepIcon, StopIcon, ZapIcon } from "./icons";
 
 type SimAction = "tick" | "network_storm" | "recover" | "launch_poll" | "end_session";
 
@@ -78,43 +79,67 @@ export default function SimulatorPanel({ sessionId }: { sessionId: string }) {
   };
 
   const btn =
-    "rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50";
+    "inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-slate-100 ring-1 ring-white/10 transition hover:bg-white/15 disabled:opacity-40";
   const secondsLeft = recoverAt === null ? null : Math.max(0, Math.ceil((recoverAt - now) / 1000));
 
   return (
-    <section className="rounded-xl border border-dashed border-indigo-300 bg-indigo-50/50 p-4">
+    <section className="rounded-2xl bg-slate-900 p-5 text-slate-100 shadow-lg shadow-slate-900/10 print:hidden">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-semibold text-indigo-900">Live class simulator</h2>
-        <span className="text-xs text-indigo-700">Demo mode · injects events through the ingest adapter</span>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button className={btn} disabled={busy !== null} onClick={() => void run("tick")}>
-          Tick
-        </button>
-        <label className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700">
-          <input type="checkbox" checked={autoTick} onChange={(e) => setAutoTick(e.target.checked)} />
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-indigo-300 ring-1 ring-white/10">
+            <ZapIcon className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="font-semibold text-white">Live class simulator</h2>
+            <p className="text-xs text-slate-400">Demo mode · injects events through the ingest adapter</p>
+          </div>
+        </div>
+        <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            className="peer sr-only"
+            checked={autoTick}
+            onChange={(e) => setAutoTick(e.target.checked)}
+          />
+          <span className="relative h-5 w-9 rounded-full bg-white/15 transition peer-checked:bg-emerald-500 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
           Auto tick (3s)
         </label>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button className={btn} disabled={busy !== null} onClick={() => void run("tick")}>
+          <StepIcon className="h-4 w-4" />
+          Tick
+        </button>
         <button
-          className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-orange-500 px-3 py-2 text-sm font-semibold text-white shadow-md shadow-rose-500/25 transition hover:shadow-lg disabled:opacity-40"
           disabled={busy !== null || recoverAt !== null}
           onClick={() => void storm()}
         >
+          <ZapIcon className="h-4 w-4" />
           Network storm
         </button>
         <button className={btn} disabled={busy !== null} onClick={() => void run("recover")}>
+          <RefreshIcon className="h-4 w-4" />
           Recover
         </button>
         <button className={btn} disabled={busy !== null} onClick={() => void run("launch_poll")}>
+          <PollIcon className="h-4 w-4" />
           Launch poll
         </button>
         <button className={btn} disabled={busy !== null} onClick={() => void endSession()}>
+          <StopIcon className="h-4 w-4" />
           End session
         </button>
       </div>
-      <p className="mt-3 text-sm text-slate-600" aria-live="polite">
+      <p
+        className="mt-4 flex flex-wrap items-center gap-2 rounded-lg bg-black/30 px-3 py-2 font-mono text-xs text-slate-300"
+        aria-live="polite"
+      >
+        <span className="text-emerald-400">›</span>
         {busy ? `Running ${busy.replace("_", " ")}…` : log}
-        {secondsLeft !== null && ` · auto-recover in ${secondsLeft}s`}
+        {secondsLeft !== null && (
+          <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-amber-300">auto-recover in {secondsLeft}s</span>
+        )}
       </p>
     </section>
   );

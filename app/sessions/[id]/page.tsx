@@ -7,14 +7,14 @@ import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
 import AlertBar from "@/components/AlertBar";
 import BriefingPanel from "@/components/BriefingPanel";
-import LiveBadge from "@/components/LiveBadge";
+import { ArrowLeftIcon, ReportIcon } from "@/components/icons";
 import ParticipationPanel from "@/components/ParticipationPanel";
+import SessionHeader from "@/components/SessionHeader";
 import SimulatorPanel, { DEMO_MODE } from "@/components/SimulatorPanel";
 import StatCards from "@/components/StatCards";
 import Timeline from "@/components/Timeline";
 import UpdatedAgo from "@/components/UpdatedAgo";
 import { useSessionRealtime, type RealtimeStatus } from "@/components/useSessionRealtime";
-import { formatUtc } from "@/lib/format";
 import type { DashboardResponse } from "@/lib/types";
 
 const CLOCK_TICK_MS = 15_000;
@@ -60,20 +60,38 @@ export default function DashboardPage({ params }: { params: Promise<{ id: string
 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8">
-      <Link href="/sessions" className="text-sm text-slate-500 hover:text-slate-700">
-        ← All sessions
+      <Link
+        href="/sessions"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-indigo-600"
+      >
+        <ArrowLeftIcon className="h-4 w-4" />
+        All sessions
       </Link>
 
-      {state.kind === "loading" && <p className="text-slate-500">Loading dashboard…</p>}
+      {state.kind === "loading" && <DashboardSkeleton />}
 
       {state.kind === "error" && (
-        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {state.message}
         </p>
       )}
 
       {state.kind === "ready" && <Dashboard data={state.data} receivedAt={state.receivedAt} realtime={realtime} />}
     </main>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6" aria-label="Loading dashboard">
+      <div className="h-36 animate-pulse rounded-2xl bg-white ring-1 ring-slate-200/80" />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="h-32 animate-pulse rounded-2xl bg-white ring-1 ring-slate-200/80" />
+        ))}
+      </div>
+      <div className="h-64 animate-pulse rounded-2xl bg-white ring-1 ring-slate-200/80" />
+    </div>
   );
 }
 
@@ -101,34 +119,20 @@ function Dashboard({
 
   return (
     <>
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold text-slate-900">
-              <span className="font-mono text-slate-500">{session.course_code}</span>
-              {session.course_name && <span className="ml-2">{session.course_name}</span>}
-            </h1>
-            {live ? (
-              <LiveBadge />
-            ) : (
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">Ended</span>
-            )}
-          </div>
-          <p className="mt-1 text-sm text-slate-500">
-            {formatUtc(session.started_at)} · {session.duration_minutes} min
-            {live && ` · ${Math.floor(nowMin)} min elapsed`}
-          </p>
-          <div className="mt-1">
-            <UpdatedAgo receivedAt={receivedAt} status={realtime} />
-          </div>
-        </div>
-        <Link
-          href={`/sessions/${session.id}/report`}
-          className="w-fit rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-        >
-          Report
-        </Link>
-      </header>
+      <SessionHeader
+        session={session}
+        nowMin={nowMin}
+        status={<UpdatedAgo receivedAt={receivedAt} status={realtime} />}
+        actions={
+          <Link
+            href={`/sessions/${session.id}/report`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-indigo-200 hover:text-indigo-700"
+          >
+            <ReportIcon className="h-4 w-4" />
+            Report
+          </Link>
+        }
+      />
 
       {live && DEMO_MODE && <SimulatorPanel sessionId={session.id} />}
       <StatCards stats={stats} />

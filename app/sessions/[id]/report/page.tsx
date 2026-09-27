@@ -6,6 +6,8 @@ import AlertBar from "@/components/AlertBar";
 import BriefingPanel from "@/components/BriefingPanel";
 import ParticipationPanel from "@/components/ParticipationPanel";
 import PrintButton from "@/components/PrintButton";
+import SessionHeader from "@/components/SessionHeader";
+import { ArrowLeftIcon, ReportIcon } from "@/components/icons";
 import StatCards from "@/components/StatCards";
 import Timeline from "@/components/Timeline";
 import { loadSessionData } from "@/lib/data";
@@ -35,28 +37,24 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 print:max-w-none print:px-0 print:py-0">
-      <Link href={`/sessions/${session.id}`} className="text-sm text-slate-500 hover:text-slate-700 print:hidden">
-        ← Back to dashboard
+      <Link
+        href={`/sessions/${session.id}`}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-indigo-600 print:hidden"
+      >
+        <ArrowLeftIcon className="h-4 w-4" />
+        Back to dashboard
       </Link>
 
-      <div className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-medium text-slate-700">
+      <div className="flex items-center gap-2.5 rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-medium text-white">
+        <ReportIcon className="h-4 w-4 text-slate-300" />
         {ended ? "Session ended — report" : `Session in progress — snapshot at minute ${Math.floor(elapsedMin)}`}
       </div>
 
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            <span className="font-mono text-slate-500">{session.course_code}</span>
-            {session.course_name && <span className="ml-2">{session.course_name}</span>}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {formatUtc(session.started_at)} · {session.duration_minutes} min · {session.polls_launched} poll
-            {session.polls_launched === 1 ? "" : "s"}
-          </p>
-          <p className="mt-1 text-xs text-slate-400">Generated {formatUtc(now.toISOString())}</p>
-        </div>
-        <PrintButton />
-      </header>
+      <SessionHeader
+        session={session}
+        status={<p className="text-xs text-slate-400">Generated {formatUtc(now.toISOString())}</p>}
+        actions={<PrintButton />}
+      />
 
       <StatCards stats={stats} />
       <AlertBar alerts={alerts} />
