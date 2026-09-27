@@ -11,7 +11,7 @@ const PILLARS = [
   {
     Icon: PulseIcon,
     title: "Drops mean reliability",
-    body: "Clusters of disconnects are flagged as a likely network issue, never as disengagement.",
+    body: "Clusters of disconnects are flagged as a possible shared connectivity issue, never as disengagement.",
     tone: "bg-emerald-50 text-emerald-600 ring-emerald-100",
   },
   {
@@ -99,7 +99,7 @@ export default function Home() {
           </div>
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-amber-200">
             <PulseIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-            2 students dropped within a minute: likely a network issue, not disengagement.
+            2 students dropped within a minute: possible shared connectivity issue, not disengagement.
           </div>
           <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
             <PollIcon className="h-4 w-4 text-indigo-500" />

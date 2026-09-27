@@ -11,7 +11,7 @@ ClassPulse is a camera-free, privacy-first session reliability and engagement an
 1. **No camera** or facial analysis, ever.
 2. **Data minimisation:** store event type + timestamp only. Chat text is never stored.
 3. **Polls-only participation:** "silent" = attended and zero poll responses. Chat/hand raises are neutral "Live interaction" counts — never scored, ranked, or judged.
-4. **Drops = reliability:** disconnect clusters raise a "likely network/platform issue" alert, never a blame signal.
+4. **Drops = reliability:** disconnect clusters raise a "possible shared connectivity issue" alert, never a blame signal.
 5. **LLM never sees names:** only pseudonyms (S1, S2…) + aggregates go to Gemini; names are mapped back server-side.
 6. **UTC `timestamptz` only:** minute offsets computed server-side from `started_at`; no local-time strings in the data path.
 
@@ -42,7 +42,7 @@ All times are **minutes from `sessions.started_at`**, rounded to 1 decimal.
 | Poll response rate | total poll responses ÷ (`polls_launched` × attended) × 100, rounded |
 | Silent | Attended, `polls_launched` > 0, and zero poll responses |
 | Live interactions | chat + hand_raise count — displayed, never scored |
-| Reliability alert | Sliding window: any **10**-minute window containing leaves from ≥ **3** distinct students. Overlapping windows merge. Message frames it as a likely network/platform issue. |
+| Reliability alert | Sliding window: any **10**-minute window containing leaves from ≥ **3** distinct students. Overlapping windows merge. Message frames it as a possible shared connectivity issue. |
 
 Segments: `connected` (green) · `gap` (red) · `late` (amber) · `left` (grey) · `absent` (light grey hatched). Duplicate joins and orphan leaves are ignored.
 

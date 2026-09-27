@@ -5,6 +5,7 @@ import {
   buildTimeline,
   computeStats,
   detectAlerts,
+  pollContext,
   type ConnectionLog,
   type ParticipationEvent,
   type Session,
@@ -152,7 +153,7 @@ describe("seed scenario (BLUEPRINT §4.2)", () => {
     const alerts = detectAlerts(session, logs);
     expect(alerts).toHaveLength(1);
     expect(alerts[0]).toMatchObject({ startMin: 18, endMin: 22, affectedCount: 4 });
-    expect(alerts[0].message).toContain("network or platform issue");
+    expect(alerts[0].message).toContain("possible shared connectivity issue");
   });
 });
 
@@ -174,5 +175,63 @@ describe("live session", () => {
     expect(t.status).toBe("disconnected");
     expect(t.connected).toBe(false);
     expect(t.segments.at(-1)).toEqual({ type: "gap", startMin: 20, endMin: 30 });
+  });
+});
+
+describe("poll context", () => {
+  it("separates non-response from disconnection: 3 of 5 drop at min 20, poll opens at 20.1, 2 respond", () => {
+    const liveStart = "2026-10-05T18:00:00Z";
+    const session: Session = { id: "p", started_at: liveStart, duration_minutes: 75, polls_launched: 1, status: "live" };
+    const ids = ["a", "b", "c", "d", "e"];
+    const students: Student[] = ids.map((id) => ({ id, display_name: `Student ${id}` }));
+    const logs: ConnectionLog[] = [
+      ...ids.map((id) => ({ student_id: id, event_type: "join" as const, occurred_at: at(0, liveStart) })),
+      ...["c", "d", "e"].map((id) => ({ student_id: id, event_type: "leave" as const, occurred_at: at(20, liveStart) })),
+    ];
+    const events: ParticipationEvent[] = ["a", "b"].map((id) => ({
+      student_id: id,
+      kind: "poll_response",
+      poll_id: "poll-1",
+      occurred_at: at(20.1, liveStart),
+    }));
+
+    const tl = buildTimeline(session, students, logs, events, new Date(at(25, liveStart)));
+    expect(pollContext(session, tl, events)).toEqual([
+      {
+        pollId: "poll-1",
+        openedAtMin: 20.1,
+        respondents: 2,
+        attendeesAtOpen: 5,
+        disconnectedAtOpen: 3,
+        connectedResponseRate: 100,
+      },
+    ]);
+    expect(computeStats(session, tl).pollResponseRate).toBe(40);
+  });
+
+  it("counts a leave in the same minute as the poll, at the live edge, as disconnected", () => {
+    const liveStart = "2026-10-05T18:00:00Z";
+    const session: Session = { id: "p", started_at: liveStart, duration_minutes: 75, polls_launched: 1, status: "live" };
+    const ids = ["a", "b", "c", "d", "e"];
+    const students: Student[] = ids.map((id) => ({ id, display_name: `Student ${id}` }));
+    const logs: ConnectionLog[] = [
+      ...ids.map((id) => ({ student_id: id, event_type: "join" as const, occurred_at: at(0, liveStart) })),
+      ...["c", "d", "e"].map((id) => ({ student_id: id, event_type: "leave" as const, occurred_at: at(20.1, liveStart) })),
+    ];
+    const events: ParticipationEvent[] = ["a", "b"].map((id) => ({
+      student_id: id,
+      kind: "poll_response",
+      poll_id: "poll-1",
+      occurred_at: at(20.1, liveStart),
+    }));
+    // "Now" is the same minute as the leaves, so the timeline has no trailing gap segments yet.
+    const tl = buildTimeline(session, students, logs, events, new Date(at(20.1, liveStart)));
+    expect(pollContext(session, tl, events)[0]).toMatchObject({ disconnectedAtOpen: 3, connectedResponseRate: 100 });
+  });
+
+  it("ignores responses without a poll_id", () => {
+    const tl = buildTimeline(session, students, logs, events);
+    const withoutIds = events.map((e) => ({ ...e, poll_id: undefined }));
+    expect(pollContext(session, tl, withoutIds)).toEqual([]);
   });
 });

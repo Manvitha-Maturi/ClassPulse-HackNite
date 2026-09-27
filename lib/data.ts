@@ -24,7 +24,7 @@ export async function loadSessionData(supabase: SupabaseClient, sessionId: strin
       .select("student_id, event_type, occurred_at")
       .eq("session_id", sessionId)
       .order("occurred_at"),
-    supabase.from("participation_events").select("student_id, kind, occurred_at").eq("session_id", sessionId),
+    supabase.from("participation_events").select("student_id, kind, poll_id, occurred_at").eq("session_id", sessionId),
   ]);
   if (studentsRes.error) throw studentsRes.error;
   if (logsRes.error) throw logsRes.error;

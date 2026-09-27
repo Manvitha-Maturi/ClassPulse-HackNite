@@ -18,7 +18,7 @@ export default function AlertBar({ alerts }: { alerts: Alert[] }) {
           </span>
           <div className="min-w-0">
             <p className="flex flex-wrap items-center gap-2 font-semibold">
-              Likely network or platform issue
+              Possible shared connectivity issue
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                 {Math.floor(a.startMin) === Math.ceil(a.endMin)
                   ? `min ${Math.floor(a.startMin)}`

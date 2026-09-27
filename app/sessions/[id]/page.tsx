@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
 import AlertBar from "@/components/AlertBar";
+import AskPanel from "@/components/AskPanel";
 import BriefingPanel from "@/components/BriefingPanel";
 import { ArrowLeftIcon, ReportIcon } from "@/components/icons";
 import ParticipationPanel from "@/components/ParticipationPanel";
@@ -139,8 +140,17 @@ function Dashboard({
       <AlertBar alerts={alerts} />
       <BriefingPanel
         sessionId={session.id}
-        alertSignature={live ? alerts.map((a) => `${a.startMin}:${a.affectedCount}`).join("|") : ""}
+        alertSignature={
+          live
+            ? [
+                alerts.map((a) => `${a.startMin}:${a.affectedCount}`).join("|"),
+                `polls:${session.polls_launched}`,
+                `connected:${stats.connectedNow}`,
+              ].join(";")
+            : ""
+        }
       />
+      <AskPanel sessionId={session.id} />
       <Timeline
         timeline={timeline}
         durationMin={session.duration_minutes}

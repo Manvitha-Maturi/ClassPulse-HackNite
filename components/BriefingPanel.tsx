@@ -1,55 +1,63 @@
 "use client";
 
 // components/BriefingPanel.tsx — AI briefing from POST /api/gemini-summary (Gemini, or the rules fallback).
-// Loads once, on Refresh, and — on live sessions — when the alert set changes. Never on every event,
-// to stay within Gemini free-tier rate limits.
-import { useEffect, useState } from "react";
+// Loads once, on Refresh, and — on live sessions — when the signal set changes (alerts, polls, connected
+// count), debounced so a burst of events is one call. Never on every event, to stay within Gemini rate limits.
+import { useEffect, useRef, useState } from "react";
+import type { BriefingContent, BriefingResponse, Priority } from "@/lib/model-output";
+import ModelIO from "./ModelIO";
 import { RefreshIcon, ShieldIcon, SparklesIcon } from "./icons";
 
-type Briefing = {
-  source: "gemini" | "rules";
-  model: string | null;
-  latencyMs: number;
-  headline: string;
-  insights: string[];
-  suggestedActions: string[];
+const SIGNAL_DEBOUNCE_MS = 1200;
+
+const PRIORITY_CHIP: Record<Priority, { label: string; className: string }> = {
+  act_now: { label: "Act now", className: "bg-rose-50 text-rose-700 ring-rose-200" },
+  monitor: { label: "Monitor", className: "bg-amber-50 text-amber-800 ring-amber-200" },
+  all_clear: { label: "All clear", className: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
 };
 
 type Props = {
   sessionId: string;
-  /** Changes when a new reliability alert appears (or grows); triggers an automatic refresh. */
+  /** Changes when the alerts, polls or connected count change; triggers a debounced refresh. */
   alertSignature: string;
   /** Show the Refresh button (off for the frozen report, which generates once on load). */
   refreshable?: boolean;
 };
 
-async function fetchBriefing(sessionId: string): Promise<Briefing | { error: string }> {
+async function fetchBriefing(
+  sessionId: string,
+  previous: BriefingContent | null,
+): Promise<BriefingResponse | { error: string }> {
   try {
     const res = await fetch("/api/gemini-summary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId }),
+      body: JSON.stringify({ sessionId, previous }),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) return { error: body.error ?? `Briefing request failed (${res.status})` };
-    return body as Briefing;
+    return body as BriefingResponse;
   } catch {
     return { error: "Could not reach the server." };
   }
 }
 
 export default function BriefingPanel({ sessionId, alertSignature, refreshable = true }: Props) {
-  const [briefing, setBriefing] = useState<Briefing | null>(null);
+  const [briefing, setBriefing] = useState<BriefingResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [nonce, setNonce] = useState(0);
+  // Last validated model output (S-labels, no names), sent back as `previous` so Gemini can say what changed.
+  const previousRef = useRef<BriefingContent | null>(null);
+  const lastSignatureRef = useRef(alertSignature);
 
   useEffect(() => {
     let cancelled = false;
-    fetchBriefing(sessionId).then((result) => {
+    fetchBriefing(sessionId, previousRef.current).then((result) => {
       if (cancelled) return;
       if ("error" in result) setError(result.error);
       else {
+        if (result.modelOutput) previousRef.current = result.modelOutput;
         setBriefing(result);
         setError(null);
       }
@@ -58,7 +66,18 @@ export default function BriefingPanel({ sessionId, alertSignature, refreshable =
     return () => {
       cancelled = true;
     };
-  }, [sessionId, alertSignature, nonce]);
+  }, [sessionId, nonce]);
+
+  // Signal-driven refresh: wait until the signals settle for SIGNAL_DEBOUNCE_MS, then fetch once.
+  useEffect(() => {
+    if (alertSignature === lastSignatureRef.current) return;
+    lastSignatureRef.current = alertSignature;
+    const t = setTimeout(() => {
+      setLoading(true);
+      setNonce((n) => n + 1);
+    }, SIGNAL_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [alertSignature]);
 
   const refresh = () => {
     setLoading(true);
@@ -77,6 +96,7 @@ export default function BriefingPanel({ sessionId, alertSignature, refreshable =
               <SparklesIcon className="h-5 w-5" />
             </span>
             <h2 className="text-lg font-semibold text-slate-900">AI briefing</h2>
+            {briefing && <PriorityChip priority={briefing.priority} />}
             {briefing && <SourceBadge briefing={briefing} />}
           </div>
           {refreshable && (
@@ -108,10 +128,14 @@ export default function BriefingPanel({ sessionId, alertSignature, refreshable =
         {briefing && (
           <div className={`mt-4 transition-opacity ${loading ? "opacity-50" : ""}`}>
             <p className="text-xl font-semibold leading-snug tracking-tight text-slate-900">{briefing.headline}</p>
+            <p className="mt-2 text-sm text-slate-600">
+              <span className="font-semibold text-indigo-700">Since last briefing:</span> {briefing.whatChanged}
+            </p>
             <div className="mt-5 grid gap-5 md:grid-cols-2">
               <Observations items={briefing.insights} />
               <Actions items={briefing.suggestedActions} />
             </div>
+            <ModelIO input={briefing.modelInput} output={briefing.modelOutput} />
           </div>
         )}
 
@@ -124,7 +148,14 @@ export default function BriefingPanel({ sessionId, alertSignature, refreshable =
   );
 }
 
-function SourceBadge({ briefing }: { briefing: Briefing }) {
+function PriorityChip({ priority }: { priority: Priority }) {
+  const chip = PRIORITY_CHIP[priority];
+  return (
+    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${chip.className}`}>{chip.label}</span>
+  );
+}
+
+function SourceBadge({ briefing }: { briefing: BriefingResponse }) {
   if (briefing.source === "rules") {
     return (
       <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-amber-200">

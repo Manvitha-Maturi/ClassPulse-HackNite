@@ -58,7 +58,8 @@ export default function SimulatorPanel({ sessionId }: { sessionId: string }) {
 
   useEffect(() => () => clearTimeout(recoverTimer.current), []);
 
-  const storm = async () => {
+  /** Network storm, optionally followed by a poll while students are still disconnected. Auto-recovers after 20s. */
+  const storm = async (withPoll = false) => {
     const ok = await run("network_storm");
     if (!ok) return;
     clearTimeout(recoverTimer.current);
@@ -69,6 +70,7 @@ export default function SimulatorPanel({ sessionId }: { sessionId: string }) {
       setRecoverAt(null);
       void run("recover");
     }, STORM_RECOVER_MS);
+    if (withPoll) await run("launch_poll");
   };
 
   const endSession = async () => {
@@ -117,6 +119,15 @@ export default function SimulatorPanel({ sessionId }: { sessionId: string }) {
         >
           <ZapIcon className="h-4 w-4" />
           Network storm
+        </button>
+        <button
+          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:shadow-lg disabled:opacity-40"
+          disabled={busy !== null || recoverAt !== null}
+          onClick={() => void storm(true)}
+          title="Network storm, then launch a poll while those students are still disconnected"
+        >
+          <ZapIcon className="h-4 w-4" />
+          Storm + poll
         </button>
         <button className={btn} disabled={busy !== null} onClick={() => void run("recover")}>
           <RefreshIcon className="h-4 w-4" />

@@ -21,6 +21,7 @@ export type ConnectionLog = { student_id: string; event_type: "join" | "leave"; 
 export type ParticipationEvent = {
   student_id: string;
   kind: "chat" | "poll_response" | "hand_raise";
+  poll_id?: string | null; // set for poll_response
   occurred_at: string;
 };
 
@@ -52,6 +53,20 @@ export type Stats = {
 };
 
 export type Alert = { startMin: number; endMin: number; affectedCount: number; message: string };
+
+/** Connection state around one poll: separates "didn't answer" from "wasn't connected to answer". */
+export type PollContext = {
+  pollId: string;
+  /** Minute of the earliest response (the poll's open time as far as the data shows). */
+  openedAtMin: number;
+  respondents: number;
+  /** Students who had joined by the time the poll opened. */
+  attendeesAtOpen: number;
+  /** Attendees who were not connected when the poll opened. */
+  disconnectedAtOpen: number;
+  /** Responses from students connected at open ÷ students connected at open × 100; null if none were connected. */
+  connectedResponseRate: number | null;
+};
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -197,6 +212,48 @@ export function detectAlerts(session: Session, logs: ConnectionLog[]): Alert[] {
     affectedCount: c.ids.size,
     message: `${c.ids.size} students disconnected between minute ${Math.floor(c.startMin)} and ${Math.ceil(
       c.endMin,
-    )}. This pattern usually means a network or platform issue, not disengagement.`,
+    )}. This pattern suggests a possible shared connectivity issue, not disengagement.`,
   }));
+}
+
+/** Was the student in a connected segment at minute t? */
+function connectedAt(s: StudentTimeline, t: number): boolean {
+  return s.segments.some(
+    (seg, i) =>
+      seg.type === "connected" &&
+      seg.startMin <= t &&
+      // A segment ending exactly at t only counts if it's the still-open one. A leave at the live edge
+      // produces no trailing gap yet, so its closed segment can also be the last one.
+      (t < seg.endMin || (t === seg.endMin && s.connected && i === s.segments.length - 1)),
+  );
+}
+
+/** Per-poll context, ordered by open time. Responses without a poll_id are ignored. */
+export function pollContext(
+  session: Session,
+  timeline: StudentTimeline[],
+  events: ParticipationEvent[],
+): PollContext[] {
+  const byPoll = groupBy(
+    events.filter((e) => e.kind === "poll_response" && e.poll_id),
+    (e) => e.poll_id!,
+  );
+
+  return [...byPoll.entries()]
+    .map(([pollId, responses]) => {
+      const openedAtMin = Math.min(...responses.map((e) => minutesSince(session.started_at, e.occurred_at)));
+      const responderIds = new Set(responses.map((e) => e.student_id));
+      const attendees = timeline.filter((s) => s.firstJoinMin !== null && s.firstJoinMin <= openedAtMin);
+      const connected = attendees.filter((s) => connectedAt(s, openedAtMin));
+      const connectedResponders = connected.filter((s) => responderIds.has(s.studentId)).length;
+      return {
+        pollId,
+        openedAtMin,
+        respondents: responderIds.size,
+        attendeesAtOpen: attendees.length,
+        disconnectedAtOpen: attendees.length - connected.length,
+        connectedResponseRate: connected.length ? Math.round((connectedResponders / connected.length) * 100) : null,
+      };
+    })
+    .sort((a, b) => a.openedAtMin - b.openedAtMin);
 }
